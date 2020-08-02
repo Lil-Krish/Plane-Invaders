@@ -261,6 +261,7 @@ def main():
 def menu():
     tf = pygame.font.SysFont('comicsans', 70)
     run = True
+
     while run:
         menu = pygame_menu.Menu(300, 400, 'Welcome', theme=pygame_menu.themes.THEME_BLUE)
         menu.add_text_input('Name: ', default='John Doe')
