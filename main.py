@@ -73,7 +73,8 @@ class Ship:
                 self.lasers.remove(laser)
             elif laser.coll(obj):
                 obj.health -= 10
-                self.lasers.remove(laser)
+                if laser in self.lasers:
+                    self.lasers.remove(laser)
 
     def cld(self):
         if self.cooldown > self.cd:
@@ -110,7 +111,14 @@ class Good(Ship):
             else:
                 for obj in objs:
                     if laser.coll(obj):
-                        objs.remove(obj)
+                        if obj.color == 'red':
+                            obj.health -= 50
+                            obj.collides_needed -= 1
+                            if obj.collides_needed == 0:
+                                objs.remove(obj)
+                        else:
+                            objs.remove(obj)
+                            
                         if laser in self.lasers:
                             self.lasers.remove(laser)
 
@@ -131,9 +139,15 @@ class Bad(Ship):
             "blue": (bs, bl),
             "green": (gs, gl),
     }
+    collides_needed = 0
 
     def __init__(self, x, y, color, health=100):
         super().__init__(x, y, health)
+        self.color = color
+        if color == "red":
+            self.collides_needed = 2
+            self.max_health = health
+
         self.ship_img, self.laser_img = self.cm[color]
         self.mask = pygame.mask.from_surface(self.ship_img)
 
@@ -145,6 +159,17 @@ class Bad(Ship):
             laser = Laser(self.x - 20, self.y, self.laser_img)
             self.lasers.append(laser)
             self.cooldown = 1
+
+    def draw(self, window):
+        super().draw(window)
+        self.bar(window)
+
+    def bar(self, window):
+        if self.color == 'red':
+            pygame.draw.rect(window, (255, 0, 0), (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width(), 10))
+            pygame.draw.rect(window, (0, 255, 0), (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width() * ((self.health) / (self.max_health)), 10))
+        else:
+            pass
 
 def quit_screen():
     pygame.quit()
@@ -250,7 +275,12 @@ def main():
 
             if collide(enemy, ply):
                 ply.health -= 10
-                enemies.remove(enemy)
+                if enemy.color == 'red':
+                    enemy.collides_needed -= 1
+                    if enemy.collides_needed == 0:
+                        enemies.remove(enemy)
+                else:
+                    enemies.remove(enemy)
 
             elif enemy.y + enemy.get_height() > height:
                 lives -= 1
