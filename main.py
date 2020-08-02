@@ -262,21 +262,12 @@ def menu():
     tf = pygame.font.SysFont('comicsans', 70)
     run = True
     while run:
-        screen.blit(bg, (0, 0))
         menu = pygame_menu.Menu(300, 400, 'Welcome', theme=pygame_menu.themes.THEME_BLUE)
         menu.add_text_input('Name: ', default='John Doe')
         menu.add_button('Play', main)
         menu.add_button('Quit', quit_screen)
 
         menu.mainloop(screen)
-        '''
-        tl1 = tf.render("Use WASD or arrow keys", 1, (52, 152, 219))
-        tl2 = tf.render("to move. Press space.", 1, (52, 152, 219))
-        tl3 = tf.render("or click to shoot. Click to begin.", 1, (52, 152, 219))
-        screen.blit(tl1, (width / 2 - tl3.get_width() / 2, height / 2 - tl1.get_height() / 2 + 70))
-        screen.blit(tl2, (width / 2 - tl2.get_width() / 2, height / 2 - tl2.get_height() / 2))
-        screen.blit(tl3, (width / 2 - tl3.get_width() / 2, height / 2 - tl3.get_height() / 2))
-        '''
 
         pygame.display.update()
 
