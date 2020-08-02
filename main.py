@@ -29,8 +29,6 @@ bg = pygame.transform.scale(pygame.image.load(os.path.join("assets", "background
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption('Game Jam 1')
 
-running = True
-
 class Laser:
     def __init__(self, x, y, img):
         self.x = x
