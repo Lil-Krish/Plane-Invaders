@@ -147,9 +147,7 @@ class Bad(Ship):
             self.cooldown = 1
 
 def quit_screen():
-    global running
     pygame.quit()
-    running = False
     sys.exit()
 
 def collide(obj1, obj2):
