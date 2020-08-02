@@ -31,7 +31,28 @@ pygame.display.set_caption('Game Jam 1')
 
 running = True
 
+class Laser:
+    def __init__(self, x, y, img):
+        self.x = x
+        self.y = y
+        self.img = img
+        self.mask = pygame.mask.from_surface(self.img)
+
+    def draw(self, window):
+        window.blit(self.img, (self.x, self.y))
+
+    def move(self, spe):
+        self.y += spe
+
+    def offs(self, height):
+        return not (self.y <= height and self.y >= 0)
+
+    def coll(self, obj):
+        return collide(self, obj)
+
 class Ship:
+    cd = 30
+
     def __init__(self, x, y, health=100):
         self.x = x
         self.y = y
@@ -43,6 +64,30 @@ class Ship:
 
     def draw(self, window):
         window.blit(self.ship_img, (self.x, self.y))
+        for laser in self.lasers:
+            laser.draw(window)
+
+    def ml(self, spe, obj):
+        self.cld()
+        for laser in self.lasers:
+            laser.move(spe)
+            if laser.offs(height):
+                self.lasers.remove(laser)
+            elif laser.coll(obj):
+                obj.health -= 10
+                self.lasers.remove(laser)
+
+    def cld(self):
+        if self.cooldown > self.cd:
+            self.cooldown = 0
+        elif self.cooldown > 0:
+            self.cooldown += 1
+
+    def shoot(self):
+        if self.cooldown == 0:
+            laser = Laser(self.x, self.y, self.laser_img)
+            self.lasers.append(laser)
+            self.cooldown = 1
 
     def get_width(self):
         return self.ship_img.get_width()
@@ -57,6 +102,30 @@ class Good(Ship):
         self.laser_img = yl
         self.mask = pygame.mask.from_surface(self.ship_img)
         self.max_health = health
+
+    def ml(self, spe, objs):
+        self.cld()
+        for laser in self.lasers:
+            laser.move(spe)
+            if laser.offs(height):
+                self.lasers.remove(laser)
+            else:
+                for obj in objs:
+                    if laser.coll(obj):
+                        objs.remove(obj)
+                        if laser in self.lasers:
+                            self.lasers.remove(laser)
+
+    def draw(self, window):
+        super().draw(window)
+        self.bar(window)
+
+    def bar(self, window):
+        pygame.draw.rect(window, (255, 0, 0), (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width(), 10))
+        pygame.draw.rect(window, (0, 255, 0), (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width() * ((self.health) / (self.max_health)), 10))
+
+    def reset(self):
+        self.health = self.max_health
 
 class Bad(Ship):
     cm = {
@@ -73,15 +142,24 @@ class Bad(Ship):
     def move(self, spe):
         self.y += spe
 
+    def shoot(self):
+        if self.cooldown == 0:
+            laser = Laser(self.x - 20, self.y, self.laser_img)
+            self.lasers.append(laser)
+            self.cooldown = 1
+
 def quit_screen():
     global running
     pygame.quit()
     running = False
     sys.exit()
 
-def main():
-    global menu_show
+def collide(obj1, obj2):
+    ofs_x = obj2.x - obj1.x
+    ofs_y = obj2.y - obj1.y
+    return obj1.mask.overlap(obj2.mask, (ofs_x, ofs_y)) != None
 
+def main():
     run = True
     FPS = 90
     level = 0
@@ -94,7 +172,9 @@ def main():
     esp = 1
 
     sp = 5
-    ply = Good(300, 650)
+    lv = 5
+
+    ply = Good(300, 630)
 
     clock = pygame.time.Clock()
 
@@ -125,9 +205,13 @@ def main():
 
         reDraw()
 
-        if (lives <= 0) or (ply.health <= 0):
+        if (lives <= 0) or ((ply.health <= 0) and (lives <= 0)):
             l = True
             lc += 1
+
+        if (lives > 0) and (ply.health <= 0):
+            lives -= 1
+            ply.reset()
 
         if l:
             if lc > FPS * 3:
@@ -146,22 +230,54 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
                 quit_screen()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                ply.shoot()
 
         keys = pygame.key.get_pressed()
         if ((keys[pygame.K_LEFT]) or (keys[pygame.K_a])) and (ply.x - sp > 0):
             ply.x -= sp
         if ((keys[pygame.K_RIGHT]) or (keys[pygame.K_d])) and (ply.x + sp + ply.get_width() < width):
             ply.x += sp
-        if ((keys[pygame.K_DOWN]) or (keys[pygame.K_s])) and (ply.y + sp + ply.get_height() < height):
+        if ((keys[pygame.K_DOWN]) or (keys[pygame.K_s])) and (ply.y + sp + ply.get_height() + 20 < height):
             ply.y += sp
         if ((keys[pygame.K_UP]) or (keys[pygame.K_w])) and (ply.y - sp > 0):
             ply.y -= sp
+        if keys[pygame.K_SPACE]:
+            ply.shoot()
 
         for enemy in enemies[:]:
             enemy.move(esp)
-            if enemy.y + enemy.get_height() > height:
+            enemy.ml(lv, ply)
+
+            if random.randrange(0, 2*60) == 1:
+                enemy.shoot()
+
+            if collide(enemy, ply):
+                ply.health -= 10
+                enemies.remove(enemy)
+
+            elif enemy.y + enemy.get_height() > height:
                 lives -= 1
                 enemies.remove(enemy)
 
+        ply.ml(-lv, enemies)
 
-main()
+def menu():
+    tf = pygame.font.SysFont('comicsans', 70)
+    run = True
+    while run:
+        screen.blit(bg, (0, 0))
+        tl = tf.render("Press the mouse to begin.", 1, (52, 152, 219))
+        screen.blit(tl, (width / 2 - tl.get_width() / 2, height / 2 - tl.get_height() / 2))
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run == False
+                quit_screen()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                main()
+
+    quit_screen()
+
+menu()
