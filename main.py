@@ -53,9 +53,6 @@ class PowerUp:
     def draw(self, window):
         window.blit(self.img, (self.x, self.y))
 
-    def get_item(self, obj):
-        return collide(self, obj)
-
 class Laser:
     def __init__(self, x, y, img):
         self.x = x
