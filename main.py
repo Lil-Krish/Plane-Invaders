@@ -147,7 +147,7 @@ class Good(Plane):
                             if obj.collides_needed == 0:
                                 objs.remove(obj)
                             else:
-                                obj.health -= int(((self.max_health) * (1 / (2 ** (times - 2)))))
+                                obj.health -= int(((self.max_health) * (1 / (2**(times - 2)))))
                         else:
                             objs.remove(obj)
 
@@ -286,7 +286,7 @@ def main():
 
         if not (len(powerups) == 0):
             for i in range(index + 1):
-                if wait_for_powerup < FPS * 3:
+                if wait_for_powerup < FPS * 4:
                     wait_for_powerup += 1
                 else:
                     if powerup_show < FPS * 3:
