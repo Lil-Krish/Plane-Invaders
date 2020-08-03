@@ -5,6 +5,7 @@ import pygame
 import pygame_menu
 import time
 import random
+import math
 
 pygame.font.init()
 
@@ -19,7 +20,7 @@ gs = pygame.image.load(os.path.join("assets", "pixel_ship_green_small.png"))
 ys = pygame.image.load(os.path.join("assets", "pixel_ship_yellow.png"))
 
 rl = pygame.image.load(os.path.join("assets", "pixel_laser_red.png"))
-bl = pygame.image.load(os.path.join("assets", "pixel_laser_blue.png"))
+bl = pygame.image.load(os.path.join("assets", "blue_laser.png"))
 gl = pygame.image.load(os.path.join("assets", "pixel_laser_green.png"))
 
 yl = pygame.image.load(os.path.join("assets", "pixel_laser_yellow.png"))
@@ -118,7 +119,7 @@ class Good(Ship):
                                 objs.remove(obj)
                         else:
                             objs.remove(obj)
-                            
+
                         if laser in self.lasers:
                             self.lasers.remove(laser)
 
@@ -170,6 +171,21 @@ class Bad(Ship):
             pygame.draw.rect(window, (0, 255, 0), (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width() * ((self.health) / (self.max_health)), 10))
         else:
             pass
+
+    def ml(self, spe, obj):
+        self.cld()
+        for laser in self.lasers:
+            laser.move(spe)
+            if laser.offs(height):
+                self.lasers.remove(laser)
+            elif laser.coll(obj):
+                if self.color == "blue":
+                    obj.health -= 20
+                else:
+                    obj.health -= 10
+
+                if laser in self.lasers:
+                    self.lasers.remove(laser)
 
 def quit_screen():
     pygame.quit()
@@ -266,15 +282,25 @@ def main():
         if keys[pygame.K_SPACE]:
             ply.shoot()
 
+        def difficulty(diff):
+            if round(math.exp(-(diff - 3)), 0) != 0:
+                return round(math.exp(-(diff - 3)), 0)
+            else:
+                return 0.05
+
         for enemy in enemies[:]:
             enemy.move(esp)
             enemy.ml(lv, ply)
 
-            if random.randrange(0, 2*60) == 1:
+            if random.randrange(0, difficulty(level) * 60) == 1:
                 enemy.shoot()
 
             if collide(enemy, ply):
-                ply.health -= 10
+                if enemy.color == "blue":
+                    ply.health -= 20
+                else:
+                    ply.health -= 10
+
                 if enemy.color == 'red':
                     enemy.collides_needed -= 1
                     if enemy.collides_needed == 0:
