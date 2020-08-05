@@ -433,7 +433,6 @@ def main():
         ply.ml(-lv, enemies)
 
 def menu():
-    tf = pygame.font.SysFont('Courier', 70)
     run = True
 
     while run:
