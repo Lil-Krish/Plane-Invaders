@@ -1,5 +1,5 @@
-# Game-Jam-1
-A game created in two days for a game jam.
+# Plane Invaders
+A Space Invaders Clone written in Python.
 
 ## How to Run
 1. Install Python at [Python's Official Website](http://python.org).
